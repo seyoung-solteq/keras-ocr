@@ -5,6 +5,7 @@ import typing
 import hashlib
 import urllib.request
 import urllib.parse
+import pathlib
 
 import cv2
 import imgaug
@@ -15,7 +16,7 @@ from shapely import geometry
 from scipy import spatial
 
 
-def read(filepath_or_buffer: typing.Union[str, io.BytesIO]):
+def read(filepath_or_buffer: typing.Union[pathlib.Path, str, io.BytesIO]):
     """Read a file into an image object
 
     Args:
@@ -27,7 +28,8 @@ def read(filepath_or_buffer: typing.Union[str, io.BytesIO]):
     if hasattr(filepath_or_buffer, 'read'):
         image = np.asarray(bytearray(filepath_or_buffer.read()), dtype=np.uint8)
         image = cv2.imdecode(image, cv2.IMREAD_UNCHANGED)
-    elif isinstance(filepath_or_buffer, str):
+    elif isinstance(filepath_or_buffer, str) or isinstance(filepath_or_buffer, pathlib.Path):
+        filepath_or_buffer = str(filepath_or_buffer)
         if validators.url(filepath_or_buffer):
             return read(urllib.request.urlopen(filepath_or_buffer))
         assert os.path.isfile(filepath_or_buffer), \
@@ -386,7 +388,7 @@ def fit(image, width: int, height: int, cval: int = 255, mode='letterbox', retur
     return fitted, scale
 
 
-def read_and_fit(filepath_or_array: typing.Union[str, np.ndarray],
+def read_and_fit(filepath_or_array: typing.Union[str, np.ndarray, pathlib.Path],
                  width: int,
                  height: int,
                  cval: int = 255,
@@ -404,7 +406,10 @@ def read_and_fit(filepath_or_array: typing.Union[str, np.ndarray],
     Returns:
         The new image
     """
-    image = read(filepath_or_array) if isinstance(filepath_or_array, str) else filepath_or_array
+    if isinstance(filepath_or_array, str) or isinstance(filepath_or_array, pathlib.Path):
+        image = read(filepath_or_array)   
+    else:
+        image = filepath_or_array
     image = fit(image=image, width=width, height=height, cval=cval, mode=mode)
     return image
 
