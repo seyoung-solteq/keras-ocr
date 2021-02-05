@@ -375,7 +375,11 @@ def fit(image, width: int, height: int, cval: int = 255, mode='letterbox', retur
     if fitted is None:
         resize_width, resize_height = map(int, [resize_width, resize_height])
         if mode == 'letterbox':
-            fitted = np.zeros((height, width, 3), dtype='uint8') + cval
+            # import ipdb; ipdb.set_trace()
+            if image.shape[-1] == 3:
+                fitted = np.zeros((height, width, 3), dtype='uint8') + cval
+            else:
+                fitted = np.zeros((height, width), dtype='uint8') + cval
             image = cv2.resize(image, dsize=(resize_width, resize_height))
             fitted[:image.shape[0], :image.shape[1]] = image[:height, :width]
         elif mode == 'crop':
