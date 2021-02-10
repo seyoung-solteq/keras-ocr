@@ -1,5 +1,5 @@
-PACKAGE_NAME = keras-ocr
-IMAGE_NAME = $(PACKAGE_NAME)
+PACKAGE_NAME = shinyeyes/keras-ocr
+IMAGE_NAME = $(PACKAGE_NAME):tf-gpu-2-4-1
 VOLUME_NAME = $(IMAGE_NAME)_venv
 # DOCKER_ARGS = -v $(PWD):/usr/src -v $(VOLUME_NAME):/usr/src/.venv --rm
 DOCKER_ARGS = -v $(PWD)/../:/usr/src -v $(HOME)/data:/root/data

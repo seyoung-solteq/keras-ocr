@@ -1,5 +1,6 @@
 # pylint: disable=invalid-name,too-many-locals,too-many-arguments,line-too-long,no-value-for-parameter,unexpected-keyword-arg
 # We ignore no-value-for-parameter and unexpected-keyword-arg because of https://github.com/PyCQA/pylint/issues/3613
+import os
 import typing
 import string
 
@@ -26,6 +27,24 @@ DEFAULT_ALPHABET = string.digits + string.ascii_lowercase
 
 PRETRAINED_WEIGHTS = {
     'kurapan': {
+        'alphabet': DEFAULT_ALPHABET,
+        'build_params': DEFAULT_BUILD_PARAMS,
+        'weights': {
+            'notop': {
+                'url':
+                'https://github.com/faustomorales/keras-ocr/releases/download/v0.8.4/crnn_kurapan_notop.h5',
+                'filename': 'crnn_kurapan_notop.h5',
+                'sha256': '027fd2cced3cbea0c4f5894bb8e9e85bac04f11daf96b8fdcf1e4ee95dcf51b9'
+            },
+            'top': {
+                'url':
+                'https://github.com/faustomorales/keras-ocr/releases/download/v0.8.4/crnn_kurapan.h5',
+                'filename': 'crnn_kurapan.h5',
+                'sha256': 'a7d8086ac8f5c3d6a0a828f7d6fbabcaf815415dd125c32533013f85603be46d'
+            }
+        }
+    },
+    'marker_number': {
         'alphabet': DEFAULT_ALPHABET,
         'build_params': DEFAULT_BUILD_PARAMS,
         'weights': {
@@ -299,6 +318,27 @@ def build_model(alphabet,
                                         outputs=loss)
     return backbone, model, training_model, prediction_model
 
+def _load_weights(recognizer, alphabet, weights):
+    if weights in PRETRAINED_WEIGHTS:
+        weights_dict = PRETRAINED_WEIGHTS[weights]
+        if alphabet == weights_dict['alphabet']:
+            recognizer.model.load_weights(
+                tools.download_and_verify(url=weights_dict['weights']['top']['url'],
+                                        filename=weights_dict['weights']['top']['filename'],
+                                        sha256=weights_dict['weights']['top']['sha256']))
+        else:
+            print('Provided alphabet does not match pretrained alphabet. '
+                    'Using backbone weights only.')
+            recognizer.backbone.load_weights(
+                tools.download_and_verify(url=weights_dict['weights']['notop']['url'],
+                                        filename=weights_dict['weights']['notop']['filename'],
+                                        sha256=weights_dict['weights']['notop']['sha256']))
+
+    else:
+        # Seyoung: Use full model
+        assert os.path.exists(weights), f"Weight path does not exist: {weights}"
+        recognizer.model.load_weights(weights)
+
 
 class Recognizer:
     """A text detector using the CRNN architecture.
@@ -313,7 +353,7 @@ class Recognizer:
     """
     def __init__(self, alphabet=None, weights='kurapan', build_params=None):
         assert alphabet or weights, 'At least one of alphabet or weights must be provided.'
-        if weights is not None:
+        if weights is not None and weights in PRETRAINED_WEIGHTS:
             build_params = build_params or PRETRAINED_WEIGHTS[weights]['build_params']
             alphabet = alphabet or PRETRAINED_WEIGHTS[weights]['alphabet']
         build_params = build_params or DEFAULT_BUILD_PARAMS
@@ -324,19 +364,7 @@ class Recognizer:
         self.backbone, self.model, self.training_model, self.prediction_model = build_model(
             alphabet=alphabet, **build_params)
         if weights is not None:
-            weights_dict = PRETRAINED_WEIGHTS[weights]
-            if alphabet == weights_dict['alphabet']:
-                self.model.load_weights(
-                    tools.download_and_verify(url=weights_dict['weights']['top']['url'],
-                                              filename=weights_dict['weights']['top']['filename'],
-                                              sha256=weights_dict['weights']['top']['sha256']))
-            else:
-                print('Provided alphabet does not match pretrained alphabet. '
-                      'Using backbone weights only.')
-                self.backbone.load_weights(
-                    tools.download_and_verify(url=weights_dict['weights']['notop']['url'],
-                                              filename=weights_dict['weights']['notop']['filename'],
-                                              sha256=weights_dict['weights']['notop']['sha256']))
+            _load_weights(self, alphabet, weights)
 
     def get_batch_generator(self, image_generator, batch_size=8, lowercase=False):
         """
