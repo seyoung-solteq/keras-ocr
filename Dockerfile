@@ -2,9 +2,9 @@ FROM tensorflow/tensorflow:2.4.1-gpu
 
 # First three is needed for OpenCV. https://stackoverflow.com/a/63377623
 RUN apt update && apt install -y \
-    ffmpeg=3.4.8-0ubuntu0.2 \
-    libsm6 \
-    libxext6 \
+    ffmpeg=7:3.4.8-0ubuntu0.2 \
+    libsm6=2:1.2.2-1 \
+    libxext6=2:1.3.3-1 \
     less \ 
     exiftool
 
