@@ -23,7 +23,7 @@ test-image:
 	docker run -it $(DOCKER_ARGS) $(IMAGE_NAME) python -c "import cc; print(dir(cc)); import keras_ocr; print(dir(keras_ocr))"
 
 tb:
-	docker run -it $(DOCKER_ARGS) -p 6006:6006 $(IMAGE_NAME) tensorboard --logdir logs/fit --port 6006 --bind_all
+	docker run -it $(DOCKER_ARGS) -p 6006:6006 --workdir=/usr/src tensorflow/tensorflow:2.4.1-gpu tensorboard --logdir logs/fit --port 6006 --bind_all
 
 init:
 	# Blow away the venv to deal with pip caching issues with conflicting
