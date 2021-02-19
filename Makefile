@@ -34,7 +34,7 @@ init:
 	pipenv run pip install -r docs/requirements.txt
 
 bash:
-	docker run -it $(DOCKER_ARGS) $(IMAGE_NAME) bash
+	docker run -it --gpus all $(DOCKER_ARGS) $(IMAGE_NAME) bash
 	
 command-lab-server:
 	pipenv run jupyter lab $(JUPYTER_OPTIONS)
