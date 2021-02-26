@@ -2,6 +2,7 @@
 # We ignore no-value-for-parameter and unexpected-keyword-arg because of https://github.com/PyCQA/pylint/issues/3613
 import os
 import typing
+from typing import Optional
 import string
 
 import tensorflow as tf
@@ -10,6 +11,7 @@ import numpy as np
 import cv2
 
 from . import tools
+from . import tf_utils
 
 DEFAULT_BUILD_PARAMS = {
     'height': 31,
@@ -351,8 +353,20 @@ class Recognizer:
         include_top: Whether to include the final classification layer in the model (set
             to False to use a custom alphabet).
     """
-    def __init__(self, alphabet=None, weights='kurapan', build_params=None):
+    def __init__(
+            self, 
+            alphabet=None, 
+            weights='kurapan', 
+            build_params=None,
+            vram_limit: Optional[int] = None,
+            ):
         assert alphabet or weights, 'At least one of alphabet or weights must be provided.'
+
+        if vram_limit is None:
+            tf_utils.set_gpu_memory_dynamic_growth()
+        else:
+            tf_utils.set_gpu_memory_limit(vram_limit)
+
         if weights is not None and weights in PRETRAINED_WEIGHTS:
             build_params = build_params or PRETRAINED_WEIGHTS[weights]['build_params']
             alphabet = alphabet or PRETRAINED_WEIGHTS[weights]['alphabet']
