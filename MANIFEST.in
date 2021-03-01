@@ -1,2 +1,1 @@
-include versioneer.py
-include keras_ocr/_version.py
+include requirements.txt
